@@ -14,11 +14,12 @@ public class DateTimeManager {
     public void printOptions() {
         System.out.println("Podaj datę w jednym z poniższych formatów:");
         for (Format value : Format.values()) {
-            System.out.println(value.getDescription());
+            System.out.println(value.getPattern());
         }
     }
 
     public String readDate(Scanner scanner) {
+        System.out.println("Podaj datę");
         return scanner.nextLine();
     }
 
@@ -26,32 +27,10 @@ public class DateTimeManager {
         return LocalDateTime.parse(date, formatter);
     }
 
-    public String getLocalDateTime(LocalDateTime localDateTime, DateTimeFormatter dateTimeFormatter) {
-        return localDateTime.format(dateTimeFormatter);
-    }
-
-    public String getUtcTime(LocalDateTime localDateTime, DateTimeFormatter dateTimeFormatter) {
+    public String getTimeForGivenZone(LocalDateTime localDateTime, DateTimeFormatter dateTimeFormatter, String timeZone) {
         ZonedDateTime ldtZoned = localDateTime.atZone(ZoneId.systemDefault());
-        ZonedDateTime utcZoned = ldtZoned.withZoneSameInstant(ZoneId.of("UTC"));
-        return utcZoned.toLocalDateTime().format(dateTimeFormatter);
-    }
-
-    public String getTimeInLondon(LocalDateTime localDateTime, DateTimeFormatter dateTimeFormatter) {
-        ZonedDateTime ldtZoned = localDateTime.atZone(ZoneId.systemDefault());
-        ZonedDateTime londonZoned = ldtZoned.withZoneSameInstant(ZoneId.of("Europe/London"));
-        return londonZoned.toLocalDateTime().format(dateTimeFormatter);
-    }
-
-    public String getTimeInLosAngeles(LocalDateTime localDateTime, DateTimeFormatter dateTimeFormatter) {
-        ZonedDateTime ldtZoned = localDateTime.atZone(ZoneId.systemDefault());
-        ZonedDateTime londonZoned = ldtZoned.withZoneSameInstant(ZoneId.of("America/Los_Angeles"));
-        return londonZoned.toLocalDateTime().format(dateTimeFormatter);
-    }
-
-    public String getTimeInSydney(LocalDateTime localDateTime, DateTimeFormatter dateTimeFormatter) {
-        ZonedDateTime ldtZoned = localDateTime.atZone(ZoneId.systemDefault());
-        ZonedDateTime sydneyTime = ldtZoned.withZoneSameInstant(ZoneId.of("Australia/Sydney"));
-        return sydneyTime.toLocalDateTime().format(dateTimeFormatter);
+        ZonedDateTime timeZonedTime = ldtZoned.withZoneSameInstant(ZoneId.of(timeZone));
+        return timeZonedTime.toLocalDateTime().format(dateTimeFormatter);
     }
 
     private List<DateTimeFormatter> initFormattersList() {
@@ -59,7 +38,7 @@ public class DateTimeManager {
         DateTimeFormatter dateTimeFormatter;
         Format[] formatsValues = Format.values();
         for (Format formatsValue : formatsValues) {
-            if (formatsValue == Format.FORMAT_2) {
+            if (!formatsValue.isContainsTime()) {
                 dateTimeFormatter = new DateTimeFormatterBuilder()
                         .appendPattern("yyyy-MM-dd")
                         .optionalStart()
@@ -70,7 +49,7 @@ public class DateTimeManager {
                         .toFormatter();
 
             } else {
-                dateTimeFormatter = DateTimeFormatter.ofPattern(formatsValue.getDescription());
+                dateTimeFormatter = DateTimeFormatter.ofPattern(formatsValue.getPattern());
             }
 
             formatters.add(dateTimeFormatter);
@@ -92,7 +71,6 @@ public class DateTimeManager {
             } catch (DateTimeParseException e) {
                 //
             }
-
         }
         if (localDateTime == null) {
             throw new DateTimeParseException("Nieprawidłowy format daty", dateString, 0);
